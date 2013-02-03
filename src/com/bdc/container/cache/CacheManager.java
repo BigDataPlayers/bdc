@@ -12,7 +12,7 @@ import com.bdc.container.test.KeyImpl;
  */
 public class CacheManager {
 
-    public static final String CACHE_LIST = "CACHE_LIST";
+    public static final String CACHE_LIST = "CacheList";
 
     private static Cache getCache(String cacheName) {
         CacheList caches = (CacheList) Server.getInstance().getContext().getBean(CacheManager.CACHE_LIST);
