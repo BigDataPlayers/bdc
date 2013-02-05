@@ -1,4 +1,4 @@
-package com.bdc.container.ftpservice;
+package com.experian.ems.universe.container.ftpservice;
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,7 +29,7 @@ public class SFTPClientImpl extends BaseFTPClient {
 
     public SFTPClientImpl() {
         System.out.println("SFTP download");
-        this.opts = new FileSystemOptions();
+        opts = new FileSystemOptions();
     }
 
     /**
@@ -44,40 +44,43 @@ public class SFTPClientImpl extends BaseFTPClient {
 //    } // initialize()
 
 
+    @Override
     public void connect() {
 //        initialize();
        try {
-            this.fsManager = VFS.getManager();
+            fsManager = VFS.getManager();
         } catch (FileSystemException ex) {
             throw new RuntimeException("failed to get fsManager from VFS", ex);
         }
 
-        UserAuthenticator auth = new StaticUserAuthenticator(null, this.user, this.password);
+        UserAuthenticator auth = new StaticUserAuthenticator(null, user, password);
         try {
             DefaultFileSystemConfigBuilder.getInstance().setUserAuthenticator(opts, auth);
         } catch (FileSystemException ex) {
             throw new RuntimeException("setUserAuthenticator failed", ex);
         }
 
-        remotePath = "sftp://" + this.user + "@" + this.hostname + ":" + this.port + this.remoteDirectory;
+        remotePath = "sftp://" + user + "@" + hostname + ":" + port + remoteDirectory;
 
         // Set starting path on remote SFTP server.
         try {
             SftpFileSystemConfigBuilder.getInstance().setStrictHostKeyChecking(opts, "no");
-            this.sftpFile = this.fsManager.resolveFile(remotePath, opts);
-            System.out.println("SFTP connection successfully established to " + remotePath);
+//            this.sftpFile = this.fsManager.resolveFile(remotePath, opts);
+//            System.out.println("SFTP connection successfully established to " + remotePath);
         } catch (FileSystemException ex) {
-            throw new RuntimeException("SFTP error parsing path " + this.remoteDirectory, ex);
+            throw new RuntimeException("SFTP error parsing path " + remoteDirectory, ex);
         }
 
     }
 
+    @Override
     public boolean send(String srcFileName, String tgtFileName) {
         try {
-            FileObject remoteFileObject = this.fsManager.resolveFile(remotePath + "/" + tgtFileName, opts);
+            sftpFile = fsManager.resolveFile(remotePath + "/" + tgtFileName, opts);
+            System.out.println("SFTP connection successfully established to " + remotePath);
             String srcPath = localDirectory + File.separator + srcFileName;
-            FileObject localFileObject = this.fsManager.resolveFile(srcPath);
-            remoteFileObject.copyFrom(localFileObject, Selectors.SELECT_SELF);
+            FileObject localFileObject = fsManager.resolveFile(srcPath);
+            sftpFile.copyFrom(localFileObject, Selectors.SELECT_SELF);
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -90,6 +93,7 @@ public class SFTPClientImpl extends BaseFTPClient {
      * Retrieves files that match the specified FileSpec from the SFTP server
      * and stores them in the local directory.
      */
+    @Override
     public boolean receive(String filePatternString) {
 
         FileObject[] children;
@@ -99,8 +103,9 @@ public class SFTPClientImpl extends BaseFTPClient {
 
         // Get a directory listing
         try {
-            this.sftpFile = this.fsManager.resolveFile(remotePath, opts);
-            children = this.sftpFile.getChildren();
+            sftpFile = fsManager.resolveFile(remotePath, opts);
+            System.out.println("SFTP connection successfully established to " + remotePath);
+            children = sftpFile.getChildren();
         } catch (FileSystemException ex) {
             System.out.println("Error collecting directory listing of " + remotePath);
             return false;
@@ -119,10 +124,10 @@ public class SFTPClientImpl extends BaseFTPClient {
                         continue;
                     }
                     fileFound = true;
-                    String localUrl = "file://" + this.localDirectory + relativePath;
-                    String standardPath = this.localDirectory + relativePath;
+                    String localUrl = "file://" + localDirectory + relativePath;
+                    String standardPath = localDirectory + relativePath;
                     System.out.println("  Standard local path is " + standardPath);
-                    LocalFile localFile = (LocalFile) this.fsManager.resolveFile(localUrl);
+                    LocalFile localFile = (LocalFile) fsManager.resolveFile(localUrl);
                     System.out.println("    Resolved local file name: " + localFile.getName());
 
                     if (!localFile.getParent().exists()) {
@@ -143,12 +148,14 @@ public class SFTPClientImpl extends BaseFTPClient {
         return fileFound;
     }
 
+    @Override
     public boolean receive(String srcFileName, String tgtFileName) {
         try {
-            FileObject remoteFileObject = this.fsManager.resolveFile(remotePath + "/" + tgtFileName, opts);
+            sftpFile = fsManager.resolveFile(remotePath + "/" + tgtFileName, opts);
+            System.out.println("SFTP connection successfully established to " + remotePath);
             String srcPath = localDirectory + File.separator + srcFileName;
-            FileObject localFileObject = this.fsManager.resolveFile(srcPath);
-            localFileObject.copyFrom(remoteFileObject, Selectors.SELECT_SELF);
+            FileObject localFileObject = fsManager.resolveFile(srcPath);
+            localFileObject.copyFrom(sftpFile, Selectors.SELECT_SELF);
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -156,10 +163,12 @@ public class SFTPClientImpl extends BaseFTPClient {
         }
     }
 
-    public boolean delete(String fileName) {
+    @Override
+    public boolean delete(String tgtFileName) {
         try {
-            FileObject remoteFileObject = this.fsManager.resolveFile(remotePath + "/" + fileName,  opts);
-            return remoteFileObject.delete();
+            sftpFile = this.fsManager.resolveFile(remotePath + "/" + tgtFileName, opts);
+            System.out.println("SFTP connection successfully established to " + remotePath);
+            return sftpFile.delete();
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -170,12 +179,15 @@ public class SFTPClientImpl extends BaseFTPClient {
     /**
      * Release system resources, close connection to the filesystem.
      */
+    @Override
     public void disconnect() {
         FileSystem fs = null;
         try {
-            this.sftpFile.close();
-            fs = this.sftpFile.getFileSystem(); // This works even after the src is closed.
-            this.fsManager.closeFileSystem(fs);
+            if (sftpFile != null) {
+                sftpFile.close();
+                fs = sftpFile.getFileSystem(); // This works even after the src is closed.
+                fsManager.closeFileSystem(fs);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
