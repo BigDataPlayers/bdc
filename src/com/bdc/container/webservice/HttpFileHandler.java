@@ -95,7 +95,7 @@ class HttpFileHandler implements HttpRequestHandler {
 
         response.setStatusCode(HttpStatus.SC_OK);
        // ResultProcessor processor = new ResultProcessor();
-        String result = processor.getResult(target.substring(1));
+        String result = processor.getResult(target);
 
         StringEntity entity = new StringEntity(result);
 
