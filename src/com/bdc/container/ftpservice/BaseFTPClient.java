@@ -8,13 +8,13 @@ package com.bdc.container.ftpservice;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class BaseFTPClient implements FTPClient {
-    String name ;
-    String hostname;
-    int port = 21;
-    String user;
-    String password;
-    String localDirectory;
-    String remoteDirectory;
+    public String name ;
+    public String hostname;
+    public int port = 21;
+    public String user;
+    public String password;
+    public String localDirectory;
+    public String remoteDirectory;
 
     public String getName() {
         return name;

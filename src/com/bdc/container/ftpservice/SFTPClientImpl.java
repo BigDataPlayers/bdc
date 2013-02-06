@@ -8,6 +8,7 @@ package com.experian.ems.universe.container.ftpservice;
  * To change this template use File | Settings | File Templates.
  */
 
+import com.bdc.container.ftpservice.BaseFTPClient;
 import org.apache.commons.vfs2.*;
 import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.apache.commons.vfs2.impl.DefaultFileSystemConfigBuilder;
