@@ -80,7 +80,7 @@ class HttpFileHandler implements HttpRequestHandler {
             response.setStatusCode(HttpStatus.SC_OK);
 //            FileEntity body = new FileEntity(file, ContentType.create("binary/png"));
             FileEntity body;
-            if (sA[1].equals("geoChart")|| sA[1].equals("cloudChart"))
+            if (sA[1].equals("geoChart")|| sA[1].startsWith("cloudChart"))
             {
                 System.out.println("Recd request for " + sA[1] + " will set content to binary");
                 body = new FileEntity(file, ContentType.create("binary/png"));
